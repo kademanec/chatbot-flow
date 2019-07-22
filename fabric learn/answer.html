@@ -1,0 +1,182 @@
+<style>
+      .canvas-container{
+             background-color:#F0F0F0;
+             }
+
+</style>
+<!DOCTYPE html>
+<html lang="en"<div class="wrapper">
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="fabric.min.js"></script>
+
+    <title>blocks</title>
+  </head>
+  <body>
+
+    <canvas id="c" width="1920" height="970"  ></canvas>
+
+    <div class="canvas-container" style=" position:absolute; top:1%;">
+      <button type="button" class="btn btn-primary" id="connect"  name="">connector</button>
+    </div>
+
+  </body>
+</html>
+
+
+<script>
+var canvas= new fabric.Canvas('c');
+canvas.selection = false;
+var rectangle=[];
+var rect = new fabric.Rect({
+
+    // bottom:300,
+    top: 100,
+    left: 300,
+    fill: 'orange',
+    stroke: 'orange',
+    brightness: 0.7,
+    width: 120,
+    height: 300,
+    strokeWidth: 2,
+    cornersize: 10,
+    rx: 20,
+    ry: 20,
+    angle: 90,
+
+  }
+
+);
+canvas.add(rect);
+var rect1 = new fabric.Rect({
+
+    // bottom:300,
+    top: 500,
+    left: 800,
+    fill: 'orange',
+    stroke: 'orange',
+    brightness: 0.7,
+    width: 120,
+    height: 300,
+    strokeWidth: 2,
+    cornersize: 10,
+    rx: 20,
+    ry: 20,
+    angle: 90,
+
+  }
+);
+canvas.add(rect1);
+rectangle.push(rect);
+rectangle.push(rect1);
+console.log(rectangle,"grpgrgrp");
+var arrayLength=rectangle.length;
+for (var i = 0; i < arrayLength; i++){
+  var id = i+1;
+  rectangle[i].id = id;// id's are distributed to each group
+}
+
+var count=1; // on click the value is 1
+var connection=false;
+console.log(count,"1");
+$("#connect").click(function(){
+
+count=1;
+connection=true;
+
+});
+var up = false;
+
+ // canvas.__eventListeners["mouse:up"] = [];
+ // canvas.__eventListeners["mouse:up"] = [];//double time execution of click function is made to single time by this
+canvas.on('mouse:up', function (e) {
+// console.log("mouseup clicked",e.e.type);
+if(e.e.type == 'mouseup' && up == false && connection == true ){
+  up = true;
+var odd=count%2;
+// console.log(odd,"12341234123412")
+if (e.isClick) {
+if(odd!=0){
+  // 1st group element targeted(onclick) count value is made to 0
+  for (var i = 0; i < rectangle.length; i++) {
+    if (rectangle[i].id==e.target.id) {
+      var groupConnection=rectangle[i];
+      console.log(groupConnection.id,"1st group element targeted");
+}
+}
+}
+ if(odd == 0 && connection ==true)  {
+  console.log("helloooooooo");
+  // 2nd group element targeted(onclick) count value is made to 0
+  for (var i = 0; i < rectangle.length; i++) {
+    if (rectangle[i].id==e.target.id) {
+      // console.log(odd,"999999999999999",groups);
+      var groupConnection1=rectangle[i];
+      console.log(groupConnection1.id,"2nd group element targeted");
+
+    }
+  }
+
+}
+  const rectz = groupConnection.getPointByOrigin('center')
+
+  const recty = groupConnection1.getPointByOrigin('center')
+  //center of each groups is fetched in this
+  const connector = new fabric.Line(
+    [rectz.x, rectz.y, recty.x, recty.y],
+    {
+      stroke: 'red',
+      strokeWidth: 3,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockRotation: false,
+      hasControls: false,
+      hasBorders: false,
+      lockMovementX: true,
+      lockMovementY: true,
+      visible:true
+    }
+  )
+
+
+  groupConnection.on('moving', function() {
+  const connectPoint1 = this.getPointByOrigin('center')
+    connector.set({
+      x1: connectPoint1.x,
+      y1: connectPoint1.y,
+       visible:true
+    })
+  })
+  groupConnection.item(0).set({
+       'stroke':'red',
+     });
+
+  groupConnection1.on('moving', function() {
+  const connectPoint2 = this.getPointByOrigin('center')
+    connector.set({
+      x2: connectPoint2.x,
+      y2: connectPoint2.y,
+      visible:true
+    })
+  })
+  groupConnection1.item(0).set({
+       'stroke':'red',
+     });
+
+    canvas.add(connector,groupConnection,groupConnection1);
+    connection = false;
+}
+count =count +1;
+// function congrps(a,b,c){
+//
+//   canvas.add(a,b,c);
+//
+// }
+}
+})
+</script>
