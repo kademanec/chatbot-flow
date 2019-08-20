@@ -1,0 +1,167 @@
+<style>
+      .canvas-container{
+             background-color:#F0F0F0;
+             }
+</style>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title></title>
+  </head>
+  <body>
+<canvas id="canvas" width="1500" height="1000"></canvas>
+
+    <script type="text/javascript">
+    var touching= null;
+    var blocks = [
+      {x : 400 , y : 400 , w : 300 , h : 100 , id : 0},
+      {x : 120 , y : 800 , w : 300 , h : 100 , id : 1},
+      {x : 10 , y : 400 , w : 300 , h : 100 , id : 2},
+      {x : 190 , y : 100 , w : 300 , h : 100 , id : 3},
+    ];
+
+    var connectors = [
+       {from : 1 , to : 2},
+       {from : 2 , to : 3},
+       {from : 0 , to : 1},
+       {from : 3 , to : 0},
+       {from : 0 , to : 0},
+    ]
+    var triangle = [
+          { x1: 15, y1: 0, x2: 30, y2: 30, x3: 0, y3: 30, },
+          { x1: 15, y1: 0, x2: 30, y2: 30, x3: 0, y3: 30, },
+          { x1: 15, y1: 0, x2: 30, y2: 30, x3: 0, y3: 30, },
+          { x1: 15, y1: 0, x2: 30, y2: 30, x3: 0, y3: 30, },
+        ]
+
+    function intersection(x,y,x1,y1,x2,y2) {
+      if (x >x1 && x<x2 && y >y1 && y<y2) {
+        // console.log(x,y,x1,x2,y1,y2,"x1x1x1x1x1xx111x1x1111");
+        return true;
+      }
+      return false;
+    }
+
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    function draw() {
+      ctx.restore();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (var i = 0; i < connectors.length; i++) {
+        var c = connectors[i];
+        b1 = blocks[c.from];
+        b2 = blocks[c.to];
+
+        c1x = b1.x + b1.w/2;
+        c1y = b1.y + b1.h/2;
+        c2x = b2.x + b2.w/2;
+        c2y = b2.y + b2.h/2;
+        ctx.beginPath();
+        ctx.moveTo(c1x, c1y);
+        ctx.lineTo(c2x, c2y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      for (var i = 0; i < blocks.length; i++) {
+        var data = blocks[i];
+        ctx.rect(data.x, data.y, data.w, data.h);
+        ctx.fillStyle = "red";
+        ctx.fill();
+        ctx.stroke();
+      }
+      for (var i = 0; i < triangle.length; i++) {
+        var data1 = triangle[i];
+        ctx.beginPath();
+        ctx.moveTo(data1.x1, data1.y1);
+        ctx.lineTo(data1.x2, data1.y2);
+        ctx.lineTo(data1.x3, data1.y3);
+        ctx.lineTo(data1.x1, data1.y1);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = 'red';
+        ctx.fill();
+
+      }
+
+    }
+
+      canvas.addEventListener('mousedown', function(event) {
+          var x = event.pageX,
+              y = event.pageY;
+              // console.log(x,y,"xyyyyy");
+              // console.log(blocks);
+              for (var i = 0; i < blocks.length; i++) {
+                var b = blocks[i];
+                
+                var intersecting = intersection(x,y,b.x,b.y,b.x+b.w,b.y+b.h)
+                if (intersecting) {
+
+                  touching = i;
+                  //
+                  // console.log(i,"intersecting");
+                }
+              }
+
+      }, false);
+
+      canvas.addEventListener('mousemove', function(event) {
+          var x = event.pageX ,
+              y = event.pageY ;
+          if (touching != null && touching != undefined) {
+            blocks[touching].x=x;
+            blocks[touching].y=y;
+            // console.log(x,"xxxxxxxxxxxx");
+            draw()
+
+          }
+
+      }, false);
+
+      canvas.addEventListener('mouseup', function(event) {
+          var x = event.pageX ,
+              y = event.pageY ;
+
+          // console.log(x,y,"xxxxxxxxxxxx");
+          touching =null
+      }, false);
+
+      draw()
+
+      function angleCalculation(x1,y1,x2,y2) { // To get the triangle on the slope
+
+        var degree;
+
+        var m = -(y2-y1)/(x2-x1);
+
+        if(x2>x1 && y2<y1){
+          degree = (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+          console.log(degree,"rightdegreee1");
+          return degree;
+        }else if (x2<x1 && y2<y1){
+          degree = 180 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+          console.log(degree,"rightdegreee2");
+          return degree;
+
+        } else if (x2<x1 && y2>y1) {
+          degree = 180 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+          console.log(degree,"rightdegreee3");
+          return degree;
+        }else if (x2>x1 && y2>y1) {
+          degree = 360 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+          console.log(degree,"rightdegreee4");
+          return degree;
+        }
+      }
+
+    </script>
+
+
+
+
+  </body>
+</html>

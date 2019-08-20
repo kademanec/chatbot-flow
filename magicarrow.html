@@ -1,0 +1,963 @@
+<style>
+      .canvas-container{
+             background-color:#F0F0F0;
+             }
+             .custom-menu {
+                 display: none;
+                 z-index: 1000;
+                 position: absolute;
+                 overflow: hidden;
+                 border: 1px solid #CCC;
+                 white-space: nowrap;
+                 font-family: sans-serif;
+                 background: #FFF;
+                 color: #333;
+                 border-radius: 5px;
+                 padding: 0;
+             }
+
+             /* Each of the items in the list */
+             .custom-menu li {
+                 padding: 8px 12px;
+                 cursor: pointer;
+                 list-style-type: none;
+                 transition: all .3s ease;
+                 user-select: none;
+             }
+
+             .custom-menu li:hover {
+                 background-color: #DEF;
+             }
+
+             .switch {
+                position: relative;
+                display: inline-block;
+                width: 60px;
+                height: 34px;
+              }
+
+              .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+              }
+
+              .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                -webkit-transition: .4s;
+                transition: .4s;
+              }
+
+              .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                -webkit-transition: .4s;
+                transition: .4s;
+              }
+
+              input:checked + .slider {
+                background-color: #2196F3;
+              }
+
+              input:focus + .slider {
+                box-shadow: 0 0 1px #2196F3;
+              }
+
+              input:checked + .slider:before {
+                -webkit-transform: translateX(26px);
+                -ms-transform: translateX(26px);
+                transform: translateX(26px);
+              }
+
+              /* Rounded sliders */
+              .slider.round {
+                border-radius: 34px;
+              }
+
+              .slider.round:before {
+                border-radius: 50%;
+              }
+
+</style>
+<!DOCTYPE html>
+<html lang="en"<div class="wrapper">
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+
+  <head>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="fabric.min.js"></script>
+
+    <title>blocks</title>
+  </head>
+  <body>
+
+    <canvas id="c" width="1920" height="970"  ></canvas>
+
+    <div class="canvas-container" style=" position:absolute; top:1%;">
+      <button type="button" class="btn btn-primary" id="Copy" name="">Copy</button>
+      <button type="button" class="btn btn-primary" id="Paste" name="">Paste</button>
+      <button type="button" class="btn btn-primary" id="delete-item" name="">Clear</button>
+      <button type="button" class="btn btn-primary" id="connect" name="">Connector</button>
+      <!-- <label class="switch">
+        <input type="checkbox"  id="connect">
+        <span class="slider round"></span>
+      </label> -->
+
+      <select class="btn btn-primary dropdown-toggle" id ="dropdown">
+      <option value="">Select</option>
+      <option value="RPA">RPA</option>
+      <option value="Entity">Entity</option>
+      <option value="User">User</option>
+      </select>
+      <button type="button" class="btn btn-primary btn-sm" onclick="drawBlocks()"  name="">submit</button>
+    </div>
+    <ul class='custom-menu'>
+      <li data-action="first">Delete</li>
+      <li data-action="second">Reverse</li>
+        <li data-action="third">Reload</li>
+    </ul>
+  </body>
+</html>
+
+
+<script>
+var canvas= new fabric.Canvas('c',{ preserveObjectStacking: true });
+
+canvas.selection = false; // selection option disabled
+
+
+
+$('#delete-item').click(function(){ // this function will call the delete objects
+
+  while (0<groups.length) {
+    canvas.remove(...canvas.getObjects());
+    groups.pop();
+    lines.pop();
+    connectors.pop();
+    triangles.pop();
+  }
+
+});
+
+var blocks=[{color:'#56A5EC',top:300,left:900,color1:'#56A5EC',innerTop:890,innerLeft:390,color2:'#56A5EC',title:'Get User Intent',titleTop:305,titleLeft:610,circleTop:390,circleLeft:610,color3:'#56A5EC',label:'RPA',labelTop:390,labelLeft:838,desc:'This is RPA',descTop:350,descLeft:615,num:'3',numTop:391,numLeft:615,img:'UiPath-icon.png',iconleft:850,icontop:305,xTop:391,xLeft:650,yTop:391,yLeft:660},
+
+{color:'#4E8975',top:300,left:1400,color1:'#4E8975',innerTop:1390,innerLeft:390,color2:'#4E8975',title:'Get User Intent',titleTop:305,titleLeft:1110,circleTop:390,circleLeft:1110,color3:'#4E8975',label:'User',labelTop:390,labelLeft:1338,desc:'This is User',descTop:350,descLeft:1115,num:'3',numTop:391,numLeft:1115,iconleft:1350,icontop:305,xTop:391,xLeft:1150,yTop:391,yLeft:1160},
+
+{color:'grey',top:300,left:400,color1:'grey',innerTop:390,innerLeft:390,color2:'grey',title:'Get User Intent',titleTop:305,titleLeft:110,circleTop:390,circleLeft:110,color3:'grey',label:'Entity',labelTop:390,labelLeft:335,desc:'This is Entity',descTop:350,descLeft:114,num:'3',numTop:391,numLeft:115,iconleft:350,icontop:305,xTop:391,xLeft:150,yTop:391,yLeft:160}
+];//forms blocks like RPA,Entity and User where the parameters are being sent in here
+
+var pointer={};
+var groups=[];
+// console.log(groups,"groupgroupgroup");
+var groupConnection='';
+var groupConnection1='';
+var triangles=[];
+
+
+var connectors=[];
+var lines=[];
+
+function pointers(){    //location of the pointer where blocks are being placed
+  canvas.on('mouse:down', function(options) {
+    pointer = canvas.getPointer(options.e);
+    // console.log(pointer,"xyxyxyxyxyyx");
+  });
+}
+
+pointers();
+function drawBlocks(){ //blocks are formed here
+console.log('drawblocks calling');
+  var value = document.getElementById('dropdown').value; // blocks value are fetched from a drop down
+  // console.log(value,"valuedropdownclicked");
+
+  for (var i = 0; i < blocks.length; i++) {
+
+    if (value == blocks[i].label) {
+      var data = blocks[i];
+
+    }
+  }
+
+  var rect = new fabric.Rect( //forms the outer big rectangle which are given in parameters above
+    {
+
+      top:data.top,
+      left:data.left,
+      fill:'#FFFFFF',
+      stroke:data.color,
+      brightness: 0.7,
+      width:120,
+      height:300,
+      strokeWidth: 2,
+      rx: 20,
+      ry: 20,
+      angle:90,
+    }
+
+  );
+
+  var rectangle = new fabric.Rect(//forms the inner small rectangle which are given in parameters above
+    {
+
+      left:data.innerTop,
+
+      top:data.innerLeft,
+      fill:data.color1,
+      stroke:data.color2,
+      strokeWidth: 2,
+      brightness: 0.7,
+      width:20,
+      height:70,
+      borderSize: 1,
+      cornersize: 10,
+      rx: 90,
+      ry: 10,
+      angle:90,
+
+    }
+
+  );
+
+  var circle = new fabric.Circle({//forms the inner small cirlce which are given in parameters above
+
+    radius: 10,
+    fill: data.color3,
+    top: data.circleTop,
+    left: data.circleLeft,
+    brightness: 0.05
+  });
+
+  var t1 = new fabric.Textbox(data.title, {//forms title text which are given in parameters above
+    width: 140,
+    top: data.titleTop,
+    left: data.titleLeft,
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'left',
+    editable:true,
+  });
+  canvas.on('text:changed', function(opt) { //maintains indentation with in the block
+   var t1 = opt.target;
+   if (t1.width > t1.fixedWidth) {
+     t1.fontSize *= t1.fixedWidth / (t1.width + 1);
+     t1.width = t1.fixedWidth;
+   }
+ });
+
+
+t1.setShadow("2px 3px 5px rgba(100, 100, 100, 0.4)");
+var t2 = new fabric.Textbox(data.label, {//forms label text which are given in parameters above
+  width: 60,
+  top: data.labelTop,
+  left:data.labelLeft,
+  fontSize: 16,
+  fill:'white',
+  textAlign: 'left',
+  editable:false,
+  label:data.label,
+});
+canvas.on('text:changed', function(opt) {//maintains indentation with in the block
+  var t2 = opt.target;
+  if (t2.width > t2.fixedWidth) {
+    t2.fontSize *= t2.fixedWidth / (t2.width + 1);
+    t2.width = t2.fixedWidth;
+  }
+});
+
+  var t3 = new fabric.Textbox(data.num, {//forms number text which are given in parameters above  (inside a circle)
+    top: data.numTop,
+    left:data.numLeft,
+    fontSize: 16,
+    fill:'white',
+    textAlign: 'left',
+    editable:true,
+  });
+
+  var t4 = new fabric.Textbox(data.desc, { //forms description text which are given in parameters above
+    width: 90,
+    top: data.descTop,
+    left:data.descLeft,
+    fontSize: 16,
+    fill:'#666666',
+    textAlign: 'left',
+    editable:true,
+  });
+  canvas.on('text:changed', function(opt) {//maintains indentation with in the block
+    var t4 = opt.target;
+    if (t4.width > t4.fixedWidth) {
+      t4.fontSize *= t4.fixedWidth / (t4.width + 1);
+      t4.width = t4.fixedWidth;
+    }
+  });
+
+  fabric.Image.fromURL(data.img, function(myImg) {//forms icon image which are given in parameters above
+
+    var img1 = myImg.set({
+      left: data.iconleft,
+      top:data.icontop,
+      scaleX:0.13,
+      scaleY:0.1
+
+    });
+
+    var group = new fabric.Group([rect,rectangle,circle,t1,t2,t3,t4,img1], {//forms group where all the shapes are settled at one place
+
+      hasRotatingPoint: false,
+      hasBorders: false,
+      hasControls:false,
+      top:pointer.y,
+      left:pointer.x,
+      label:t2.label,
+
+    });
+console.log(group.left,"X",group.top,"Y");
+    canvas.add(group);// this will draw the block
+    groups.push(group);// group are pushed inside a groups array
+    // console.log(groups,"grpgrgrp");
+    var arrayLength=groups.length;
+    for (var i = 0; i < arrayLength; i++){
+      var id = i+1;
+      groups[i].id = id;// id's are distributed to each group
+    }
+});
+
+var count=1; // on click the value is 1
+var connection=false;
+$("#connect").click(function(){
+
+  count=1;
+  if(connection==false){
+    connection=true;
+    return
+  }
+  else{
+      connection=false;
+  }
+
+});
+
+
+
+var up = false;  canvas.__eventListeners["mouse:up"] = [];//double time execution of click function is made to single time by this
+canvas.on('mouse:up', function (e) {
+
+if(e.e.type == 'mouseup' && up == false && connection == true ){
+  up = true;
+  // console.log("mouseup clicked",e.e.type);
+
+  var odd=count%2;
+  // console.log(odd,"12341234123412");
+  if (e.isClick) {
+
+    if(odd!=0){
+      // 1st group element targeted(onclick) count value is made to 0
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].id==e.target.id) {
+          groupConnection=groups[i];
+          // console.log(groupConnection.id,"1st group element targeted");
+
+        }
+      }
+    }
+
+    if(odd == 0 && connection ==true)  {
+      // 2nd group element targeted(onclick) count value is made to 0
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].id==e.target.id) {
+          // console.log(odd,"999999999999999",groups);
+          groupConnection1=groups[i];
+          // console.log(groupConnection1.id,"2nd group element targeted");
+
+        }
+      }
+
+
+      const rectz = groupConnection.getPointByOrigin('center')
+
+      const recty = groupConnection1.getPointByOrigin('center')
+
+      // console.log(rectz,recty,"grpgrp1");
+      //center of each groups is fetched in this
+      const connector = new fabric.Line(
+        //forms the line from block to block
+        [rectz.x, rectz.y, recty.x, recty.y],
+        {
+          // selectable:false,
+          stroke: '#8470ff',
+          strokeWidth: 3,
+          lockScalingX: true,
+          lockScalingY: true,
+          lockRotation: true,
+          hasControls: false,
+          hasBorders: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          visible:true,
+        })
+
+         console.log(rectz.y,recty.y,rectz.x,recty.x);
+         var deg = 90 - window.angleCalculation(connector.x1,connector.y1,connector.x2,connector.y2);
+      // console.log(deg,"ddddddddddddddddddddddddddd");;
+        // var ang = 270-window.reverses(connector.x1,connector.y1,connector.x2,connector.y2);
+
+
+      var img2 = new fabric.Triangle({
+        //forms the triangle on middle of the line
+        left:Math.ceil(((rectz.x+recty.x)/2)),
+        top:Math.ceil(((rectz.y+recty.y)/2)),
+        hasBorders:false,
+        scaleX:1,
+        scaleY:1,
+        angle:deg,
+        hasControls:false,
+        hasRotatingPoint:false,
+        selectable:true,
+        originX:'center',
+        originY:'center',
+        lockMovementX: true,
+        lockMovementY: true,
+        height:30,
+        width:20,
+      });
+
+      groupConnection.on('moving', function() {
+        //block moving function
+      const connectPoint1 = this.getPointByOrigin('center')
+        connector.set({
+          //sets the line from first block x and y position
+          x1: connectPoint1.x,
+          y1: connectPoint1.y,
+           visible:true,
+
+          // selectable:false,
+
+        })
+        var deg = 90 - window.angleCalculation(connector.x1,connector.y1,connector.x2,connector.y2);
+        // console.log(deg,"angle");
+         var ang = 270- window.reverses(connector.x1,connector.y1,connector.x2,connector.y2);
+
+        img2.set({
+          //sets the triangle on middle of the line, when the first block is moved the triangle appears on the line
+          left:Math.ceil(((connector.x2+connector.x1)/2)),
+          top:Math.ceil(((connector.y2+connector.y1)/2)),
+          angle:deg,
+          visible:true,
+          hasControls:false,
+          hasRotatingPoint:false,
+          hasBorders:false,
+          scaleX:1,
+          scaleY:1,
+          lockMovementX: true,
+          lockMovementY: true,
+          originX:'center',
+          originY:'center',
+          height:30,
+          width:20,
+          selectable:true,
+        })
+console.log(img2.angle,"degree changes");
+        connector.setCoords();
+        img2.setCoords();
+          // console.log(connector.x1,connector.y1,"x1x1x1x1x1y1y1y1y1y1y1y1y");
+
+
+       })
+
+      groupConnection.item(0).set({
+        'stroke':'#E77471',//turns red
+      });
+      groupConnection.setCoords();
+
+      groupConnection1.on('moving', function() {
+
+        //block moving function
+      const connectPoint2 = this.getPointByOrigin('center')
+      //sets the line from second block x and y position
+
+        connector.set({
+          x2: connectPoint2.x,
+          y2: connectPoint2.y,
+          visible:true,
+
+          // selectable:false,
+        })
+         var deg = 90 - window.angleCalculation(connector.x1,connector.y1,connector.x2,connector.y2);
+        // console.log(deg,"beforerevertbefore");
+        //sets the triangle on middle of the line when the second block is moved the triangle appears on the line
+         var ang = 270 - window.reverses(connector.x1,connector.y1,connector.x2,connector.y2);
+
+        img2.set({
+          left:Math.ceil(((connector.x2+connector.x1)/2)),
+          top:Math.ceil(((connector.y2+connector.y1)/2)),
+          angle:deg,
+          visible:true,
+          hasControls:false,
+          hasRotatingPoint:false,
+          hasBorders:false,
+          scaleX:1,
+          scaleY:1,
+          lockMovementX: true,
+          lockMovementY: true,
+          originX:'center',
+          originY:'center',
+          height:30,
+          width:20,
+          selectable:true,
+        })
+
+        connector.setCoords();
+        img2.setCoords();
+        // console.log(connector.x2,"XXXXXX",connector.y2,"YYYYYYYY");
+        console.log(img2.angle,"degree changes");
+      })
+
+      groupConnection1.item(0).set({
+        'stroke':'#E77471',//turns red
+      });
+      groupConnection1.setCoords();
+      // console.log(groupConnection1.top,groupConnection1.left,"groupconnection1XYXYXYXYXYXYXYXYXYXYYXYX");
+
+
+      $(".custom-menu li").click(function(){
+
+        // This is the triggered action name
+        // console.log(connector,"co",img2,"triangle");
+        switch($(this).attr("data-action")) {
+
+          // A case for each action. Your actions here
+          case "first":  deletes(connector,img2);break;
+          case "second": reverses(connector.x1,connector.y1,connector.x2,connector.y2); break;
+          case "third": reload(); break;
+
+        }
+
+        // Hide it AFTER the action was triggered
+        $(".custom-menu").hide(100);
+      });
+        congrps(connector,img2,groupConnection,groupConnection1);
+
+      canvas.on('mouse:up', function(e) {
+        // console.log("after click outside color change mouse down");
+
+         if(groupConnection.label == 'RPA'){
+
+           groupConnection.item(0).set({
+             'stroke': blocks[0].color,
+           })
+
+         }
+
+         else if(groupConnection.label == 'Entity'){
+           groupConnection.item(0).set({
+             'stroke': blocks[2].color,
+           });
+
+         }
+         else if(groupConnection.label == 'User'){
+
+           groupConnection.item(0).set({
+             'stroke': blocks[1].color,
+           });
+
+         }
+         if(groupConnection1.label == 'RPA'){
+
+           groupConnection1.item(0).set({
+             'stroke': blocks[0].color,
+           });
+
+         }else if(groupConnection1.label == 'Entity'){
+
+           groupConnection1.item(0).set({
+             'stroke': blocks[2].color,
+           });
+
+         }
+
+         else if(groupConnection.label == 'User'){
+           groupConnection1.item(0).set({
+             'stroke': blocks[1].color,
+           });
+         }
+      });
+
+
+      canvas.on('mouse:up', function(e) {
+        // console.log("after click outside color change mouse down");
+
+        var a = e.target;
+        // console.log(a,"aaaaaaaaaaaaaaaaa");
+        if(a.label == 'RPA' ){
+          // console.log("rpa clicked");
+          a.item(0).set({
+            'stroke': "#E77471",//turns red
+          })
+        }
+
+        else if(a.label == 'Entity'){
+          // console.log("entity clicked");
+          a.item(0).set({
+            'stroke': "#E77471",//turns red
+          });
+        }
+        else if(a.label == 'User'){
+          // console.log("user clicked");
+          a.item(0).set({
+            'stroke': "#E77471",//turns red
+          });
+        }
+        canvas.__eventListeners["mouse:up"] = [];
+      });
+
+      connection=false;
+      }
+
+
+    }
+    count = count+1;
+
+
+
+    function congrps(a,d,b,c){
+      //formation of lines and triangles is added to canvas here
+      if(connectors.length>0){
+        var eleFirst = 0
+        var eleSecond= 0
+        for (var i = 0; i < connectors.length; i++) {
+          // to make one block should have two connectors this code follows
+
+          if(b.id == connectors[i].from || b.id == connectors[i].to  ){
+            eleFirst++
+
+          }
+          if(c.id == connectors[i].from || c.id == connectors[i].to ){
+            eleSecond++
+
+          }
+         if((b.id == connectors[i].from||b.id == connectors[i].to) &&(c.id == connectors[i].from || c.id == connectors[i].to) ){
+            console.log("connection not possible");
+            return;
+          }
+
+        }
+        if(eleFirst <2 && eleSecond <2){
+          console.log(eleFirst,"eleFirst",eleSecond,"eleSecond");
+          a.from_id = b.id
+          a.to_id = c.id
+          lines.push(a);
+          var arrayLength=lines.length;
+          for (var i = 0; i < arrayLength; i++){
+            var line_id = i+1;
+            lines[i].line_id = line_id;// id's are distributed to each group
+          }
+          triangles.push(d);
+          var arrayTriangle=triangles.length;
+          for (var i = 0; i < arrayTriangle; i++){
+            var tri_id = i+1;
+            var name= "triangle";
+            triangles[i].name=name;
+            triangles[i].tri_id = tri_id;// id's are distributed to each triangle
+            lines[i].tri_id = tri_id;// id
+          }
+
+          if (b.id == c.id) {
+
+            return null;
+          }
+          else{
+          connectors.push({from:b.id,from_label:b.label,to:c.id,to_label:c.label,line_id:a.line_id});
+          }
+          connection = false;
+        canvas.add(a,d,b,c);
+
+        }
+        else{
+            // alert("One Block can have only two connections")
+            console.log("helloo");
+        }
+
+
+
+      }else{
+        a.from_id = b.id
+        a.to_id = c.id
+        lines.push(a);
+        triangles.push(d);
+        var arrayLength=lines.length;
+        for (var i = 0; i < arrayLength; i++){
+          var line_id = i+1;
+          lines[i].line_id = line_id;// id's are distributed to each lines
+            var name= "lineee";
+          lines[i].name=name;
+          triangles[i].line_id = line_id;
+        }
+        var arrayTriangle=triangles.length;
+        for (var i = 0; i < arrayTriangle; i++){
+          var tri_id = i+1;
+          var name= "triangle";
+          triangles[i].name=name;
+          triangles[i].tri_id = tri_id;// id's are distributed to each triangle
+          lines[i].tri_id = tri_id;// id's are distributed to each triangle
+        }
+
+
+
+        console.log(lines,'gggggggggggggggggggggggggggggggggg');
+
+
+        if (b.id == c.id) {
+
+          console.log("one on one connection not possible");
+          // console.log(connectors,"connectconnectpadsfasdfasdfasd");
+          return null;
+        }
+
+
+        else{
+          connectors.push({from:b.id,from_label:b.label,to:c.id,to_label:c.label,line_id:a.line_id});
+          console.log(connectors,"oldoldoldoldoldoldoldodld");
+
+          // console.log(connectors,"from and to");
+
+        }
+        connection = false;
+        canvas.add(a,d,b,c);
+          canvas.__eventListeners["mouse:up"] = [];
+      }
+
+
+    }
+
+    up = false;
+    }
+
+
+  })
+
+
+
+
+  // If the document is clicked somewhere
+  $(document).bind("mousedown", function (e) {
+
+    // If the clicked element is not the menu
+    if (!$(e.target).parents(".custom-menu").length > 0) {
+
+      // Hide it
+      $(".custom-menu").hide(100);
+    }
+  });
+
+}//drawblocks ends here
+
+$(document).bind("contextmenu", function (event) {
+
+  // Avoid the real one
+  event.preventDefault();
+
+  // Show contextmenu
+  $(".custom-menu").finish().toggle(100).
+
+  // In the right position (the mouse)
+  css({
+    top: event.pageY + "px",
+    left: event.pageX + "px"
+  });
+});
+
+
+function reload(){
+  window.location.reload();
+}
+
+
+function deletes(o,triObj){
+
+  var selected = canvas.getActiveObject();
+  console.log(selected,"selectseleectselectseleect");
+  var triObj ={}
+  var idx= null;
+  var array= connectors.length;
+
+
+  for (var i = 0; i < array; i++){
+
+    if(selected.line_id== connectors[i].line_id ){
+
+      idx = i;
+      // console.log(idx,"indexindex");
+      break;
+    }
+  }
+
+  connectors.splice(idx,1)
+console.log(connectors,"fromandtoooo");
+
+  canvas.getObjects().forEach(function(o) {
+      if(selected.tri_id == o.tri_id ){
+         triObj = o;
+        //  console.log(triObj,"triObjtriObjtriObjtriObj");
+      }
+
+    })
+  canvas.getObjects().forEach(function(o) {
+    if(o.line_id == selected.line_id && o.tri_id ==selected.tri_id  ) {
+        console.log(o,"ssssssssssssssssssssssssssssss");
+    canvas.setActiveObject(o,triObj);
+
+
+    // console.log(selected.line_id,"beforebeforebeforebefore",selected.line_id,"asdadsfasd");
+    canvas.remove(o,triObj);
+
+      }
+
+  })
+
+
+
+}
+// canvas.on('mouse:down', function(e) {
+//   // console.log("after click outside color change mouse down");
+//
+//   var a =canvas.getActiveObject();
+//   console.log(a,"target");
+//   if(a.stroke == '#8470ff'){
+//
+//     a.set({
+//       'stroke': "#F08080",
+//     })
+//   }
+//   else {
+//       a.set({
+//         'stroke': "#8470ff",
+//       })
+//   }
+//
+//
+// })
+
+
+
+
+ $('#Copy').click(function(){
+   canvas.getActiveObject().clone(function(cloned) {
+    //  console.log(cloned,"clipboardclipboard");
+     _clipboard = cloned;
+   });
+ })
+
+ $('#Paste').click(function(){
+
+   _clipboard.clone(function(clonedObj) {
+     canvas.discardActiveObject();
+     clonedObj.set({
+       left: clonedObj.left + 20,
+       top: clonedObj.top + 20,
+       evented: true,
+       hasRotatingPoint: false,
+       hasBorders: false,
+       hasControls:false,
+     });
+     if (clonedObj.type === 'activeSelection') {
+
+       clonedObj.canvas = canvas;
+       clonedObj.forEachObject(function(obj) {
+         canvas.add(obj);
+        //  console.log(obj,"objobjobj");
+       });
+
+       clonedObj.setCoords();
+     } else {
+       canvas.add(clonedObj);
+       groups.push(clonedObj);
+       var arrayLength=groups.length;
+       for (var i = 0; i < arrayLength; i++){
+         var id = i+1;
+         groups[i].id = id;// id's are distributed to each group
+       }
+
+
+     }
+     _clipboard.top += 10;
+     _clipboard.left += 10;
+     canvas.setActiveObject(clonedObj);
+     canvas.requestRenderAll();
+   });
+
+ })
+
+ function angleCalculation(x1,y1,x2,y2) { // To get the triangle on the slope
+   // console.log("x1",x1,"y1",y1,"x2",x2,"y2",y2);
+   var degree;
+// console.log(x1,x2,y1,y2,"cooridnatescooridnates");
+   var m = -(y2-y1)/(x2-x1);
+
+   if(x2>x1 && y2<y1){
+     degree = (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+     console.log(degree,"rightdegreee1");
+     return degree;
+   }else if (x2<x1 && y2<y1){
+     degree = 180 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+     console.log(degree,"rightdegreee2");
+     return degree;
+
+   } else if (x2<x1 && y2>y1) {
+     degree = 180 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+     console.log(degree,"rightdegreee3");
+     return degree;
+   }else if (x2>x1 && y2>y1) {
+     degree = 360 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+     console.log(degree,"rightdegreee4");
+     return degree;
+   }
+ }
+
+ function reverses(x1,y1,x2,y2) { // To get the triangle on the slope
+
+  //  console.log(x1,x2,y1,y2,"cooridnates");
+  var degree;
+// console.log(x1,x2,y1,y2,"cooridnatescooridnates");
+  var m = -(y2-y1)/(x2-x1);
+
+  if(x2>x1 && y2<y1){
+    degree = (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+    console.log(degree,"rightdegreee1");
+    return degree;
+  }else if (x2<x1 && y2<y1){
+    degree = 180 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+    console.log(degree,"rightdegreee2");
+    return degree;
+
+  } else if (x2<x1 && y2>y1) {
+    degree = 180 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+    console.log(degree,"rightdegreee3");
+    return degree;
+  }else if (x2>x1 && y2>y1) {
+    degree = 360 + (Math.asin(m/Math.sqrt(1+m*m)) * 180) / Math.PI;
+    console.log(degree,"rightdegreee4");
+    return degree;
+  }
+
+}
+
+
+
+
+
+</script>
